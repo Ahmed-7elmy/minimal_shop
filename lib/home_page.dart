@@ -1,16 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mshtsht/auth/auth_bloc.dart';
+import 'package:mshtsht/auth/auth_event.dart';
 import 'package:mshtsht/components/my_button_home.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  void signOut(BuildContext context) {
-    // Dispatch a sign out event to your AuthBloc
-    context.read<AuthBloc>().add(LoggedOut());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +15,10 @@ class HomePage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => signOut(context),
+            onPressed: () {
+              // Dispatch a sign out event to your AuthBloc
+              context.read<AuthBloc>().add(AuthLogoutRequested());
+            },
           ),
         ],
         title: const Text('Home Page'),

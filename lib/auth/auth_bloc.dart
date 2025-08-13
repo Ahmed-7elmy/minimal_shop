@@ -1,67 +1,50 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:mshtsht/auth/auth_event.dart';
-import 'package:mshtsht/auth/auth_repository.dart';
-
-abstract class AuthState {}
-
-class AuthInitial extends AuthState {}
-
-class AuthLoading extends AuthState {}
-
-class AuthAuthenticated extends AuthState {}
-
-class AuthUnauthenticated extends AuthState {}
-
-class AuthError extends AuthState {
-  final String message;
-  AuthError(this.message);
-}
+import 'package:firebase_auth/firebase_auth.dart';
+import 'auth_event.dart';
+import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository authRepository;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  AuthBloc({required this.authRepository}) : super(AuthInitial()) {
-    on<AppStarted>((event, emit) {
-      final isLoggedIn = authRepository.isLoggedIn;
-      if (isLoggedIn) {
-        emit(AuthAuthenticated());
-      } else {
-        emit(AuthUnauthenticated());
-      }
-    });
-
-    on<LoggedIn>((event, emit) => emit(AuthAuthenticated()));
-
-    on<LoggedOut>((event, emit) async {
-      emit(AuthLoading()); // optional: show loader
-      await authRepository.signOut();
-      emit(AuthUnauthenticated());
-      emit(AuthAuthenticated()); //
-    });
-
-    on<LoginRequested>((event, emit) async {
-      emit(AuthLoading());
-      try {
-        await authRepository.signIn(event.email, event.password);
-        emit(AuthAuthenticated());
-      } catch (e) {
-        emit(AuthError(e.toString()));
-      }
-    });
+  AuthBloc() : super(AuthInitial()) {
+    on<AuthCheckRequested>(_onAuthCheckRequested);
+    on<AuthLoginRequested>(_onAuthLoginRequested);
+    on<AuthLogoutRequested>(_onAuthLogoutRequested);
   }
-}
 
-abstract class AuthEvent {}
+  Future<void> _onAuthCheckRequested(
+    AuthCheckRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final user = _firebaseAuth.currentUser;
+    if (user != null) {
+      emit(AuthAuthenticated());
+    } else {
+      emit(AuthUnauthenticated());
+    }
+  }
 
-class AppStarted extends AuthEvent {}
+  Future<void> _onAuthLoginRequested(
+    AuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      await _firebaseAuth.signInWithEmailAndPassword(
+        email: event.email,
+        password: event.password,
+      );
+      emit(AuthAuthenticated());
+    } on FirebaseAuthException catch (e) {
+      emit(AuthUnauthenticated(message: e.message));
+    }
+  }
 
-class LoggedIn extends AuthEvent {}
-
-class LoggedOut extends AuthEvent {}
-
-class LoginRequested extends AuthEvent {
-  final String email;
-  final String password;
-
-  LoginRequested({required this.email, required this.password});
+  Future<void> _onAuthLogoutRequested(
+    AuthLogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    await _firebaseAuth.signOut();
+    emit(AuthUnauthenticated());
+  }
 }

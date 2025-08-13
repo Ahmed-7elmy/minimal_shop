@@ -6,6 +6,8 @@ import 'package:mshtsht/components/customtextfield.dart';
 import 'package:mshtsht/components/my_button.dart';
 import 'package:mshtsht/components/mysquare.dart';
 
+import 'auth/auth_event.dart';
+
 class LoginPage extends StatefulWidget {
   LoginPage({super.key});
 
@@ -18,19 +20,19 @@ class _LoginPageState extends State<LoginPage> {
 
   final TextEditingController passwordController = TextEditingController();
 
-  Future<void> signuserin() async {
-    try {
-      // Call repository through bloc
-      context.read<AuthBloc>().add(
-        LoginRequested(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-        ),
-      );
-    } catch (e) {
-      showError('Something went wrong: $e');
-    }
-  }
+  // Future<void> signuserin() async {
+  //   try {
+  //     // Call repository through bloc
+  //     context.read<AuthBloc>().add(
+  //       LoginRequested(
+  //         email: emailController.text.trim(),
+  //         password: passwordController.text.trim(),
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     showError('Something went wrong: $e');
+  //   }
+  // }
 
   // void wrongEmailmessage() {
   //   showDialog(
@@ -72,25 +74,25 @@ class _LoginPageState extends State<LoginPage> {
   //   );
   // }
 
-  void showError(String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Error'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void showError(String message) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: Text('Error'),
+  //         content: Text(message),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: Text('OK'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +143,16 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 25),
-              MyButton(onTap: signuserin),
+              MyButton(
+                onTap: () {
+                  context.read<AuthBloc>().add(
+                    AuthLoginRequested(
+                      emailController.text.trim(),
+                      passwordController.text.trim(),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 25),
 
               Padding(
